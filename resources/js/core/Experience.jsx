@@ -3,49 +3,32 @@ import { Canvas } from '@react-three/fiber';
 import SceneManager from './SceneManager.jsx';
 
 export default function Experience() {
+    // NOTE: the scrubbed background video, its blur mask, and the
+    // fixed/sticky full-viewport wrapper all already live in
+    // home.blade.php (#cinematic-wrapper). This component is mounted
+    // *inside* that markup's #home-intro-webgl-root, so it should only
+    // ever render the R3F canvas — duplicating the video here (with
+    // the same id) created a second, never-scrubbed <video> plus an
+    // opaque background sitting on top of the real one, which is why
+    // the visible video looked like it wasn't tracking scroll at all.
     return (
-        <div className="fixed inset-0 h-screen w-screen overflow-hidden bg-[#090B10]">
-            {/* Loop-free scroll-scrubbed background video */}
-            <video
-                id="scroll-journey-video"
-                src="/video/no_in_my_video_thers_no_charac.mp4"
-                muted
-                playsInline
-                preload="auto"
-                className="absolute inset-0 w-full h-[130%] object-cover object-top z-0 pointer-events-none"
-                style={{ opacity: 0.8 }}
-            />
+        <Canvas
+            shadows
+            dpr={[1, 2]}
+            camera={{
+                position: [0, 14, 180],
+                fov: 45,
+                near: 0.1,
+                far: 400
+            }}
+            style={{ pointerEvents: 'none', width: '100%', height: '100%' }}
+        >
+            {/* Atmospheric Fog */}
+            <fogExp2 attach="fog" color="#1E282A" density={0.007} />
 
-            {/* Bottom Blur Mask Overlay */}
-            <div 
-                className="absolute inset-0 z-10 pointer-events-none backdrop-blur-xl"
-                style={{
-                    maskImage: 'linear-gradient(to top, black 0%, transparent 45%)',
-                    WebkitMaskImage: 'linear-gradient(to top, black 0%, transparent 45%)'
-                }}
-            />
-
-            {/* R3F Canvas Container */}
-            <div className="absolute inset-0 z-20 pointer-events-none">
-                <Canvas
-                    shadows
-                    dpr={[1, 2]}
-                    camera={{
-                        position: [0, 14, 180],
-                        fov: 45,
-                        near: 0.1,
-                        far: 400
-                    }}
-                    style={{ pointerEvents: 'none' }}
-                >
-                    {/* Atmospheric Fog */}
-                    <fogExp2 attach="fog" color="#1E282A" density={0.007} />
-
-                    <Suspense fallback={null}>
-                        <SceneManager />
-                    </Suspense>
-                </Canvas>
-            </div>
-        </div>
+            <Suspense fallback={null}>
+                <SceneManager />
+            </Suspense>
+        </Canvas>
     );
 }

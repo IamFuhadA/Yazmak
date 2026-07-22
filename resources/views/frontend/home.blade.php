@@ -36,16 +36,22 @@
 
 {{-- ═══════════════════════════════════════════════════════════════════
      § CINEMATIC SCROLL WORLD
-     500vh tall container — body scrolls, R3F canvas stays fixed.
+     500vh tall container — body scrolls, R3F canvas + video stay
+     sticky to the viewport only while this wrapper is in view, then
+     scroll away naturally once the Hero section begins.
      Lenis reads window.scrollY / totalHeight → dispatches 'cinematic-scroll' event.
      ═══════════════════════════════════════════════════════════════════ --}}
 
 {{-- ── Scroll Container: Real height drives Lenis progress ── --}}
 <div id="cinematic-wrapper" class="relative" style="height:500vh; margin-top: 0; background-color: #090B10;">
 
-    {{-- ── Fixed Full-screen Backdrop (video + R3F layers) ── --}}
-    <div class="fixed inset-0 w-full h-screen z-0 overflow-hidden pointer-events-none"
-         style="top:0;left:0;">
+    {{-- ── Sticky Full-screen Backdrop (video + R3F layers) ──
+         Uses `sticky`, not `fixed`, so it pins to the viewport only
+         while #cinematic-wrapper is in view, then scrolls away with
+         it once the wrapper's 500vh is exhausted — i.e. right at the
+         start of the Hero section, instead of staying fixed for the
+         rest of the page. --}}
+    <div class="sticky top-0 w-full h-screen z-0 overflow-hidden pointer-events-none">
 
         {{-- Local 10-second scrubbed background video --}}
         <video
