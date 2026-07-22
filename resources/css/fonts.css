@@ -1,0 +1,8 @@
+.font-heading {
+    font-family: 'Instrument Serif', serif;
+}
+
+body, html {
+    font-family: 'Inter', sans-serif;
+    color: var(--primary);
+}

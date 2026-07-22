@@ -35,130 +35,92 @@
 
 
 {{-- ═══════════════════════════════════════════════════════════════════
-     § CINEMATIC JOURNEY — 6-Scene Scroll-Driven WebGL Intro
-     Journey arc: Water → Underwater → Pool → Forest → Flowers → Sunrise
-     Each scene renders a photographic keyframe through GLSL shaders.
+     § CINEMATIC SCROLL WORLD
+     500vh tall container — body scrolls, R3F canvas stays fixed.
+     Lenis reads window.scrollY / totalHeight → dispatches 'cinematic-scroll' event.
      ═══════════════════════════════════════════════════════════════════ --}}
-<div
-    id="home-intro-scroll"
-    class="home-intro-scroll relative"
-    style="height:1400vh;"
->
-    <div
-        id="home-intro"
-        class="home-intro sticky top-0 z-[100] h-screen w-full overflow-hidden"
-        aria-label="A calming nature journey introducing our mental wellness platform"
-    >
-        {{-- WebGL Canvas --}}
-        <div id="home-intro-webgl-root" class="absolute inset-0 h-full w-full" aria-hidden="true"></div>
 
-        {{-- Subtle top vignette (keeps header area clear) --}}
-        <div
-            class="pointer-events-none absolute inset-x-0 top-0 h-40"
-            style="background:linear-gradient(to bottom, rgba(0,0,0,.08), transparent);"
-            aria-hidden="true"
-        ></div>
+{{-- ── Scroll Container: Real height drives Lenis progress ── --}}
+<div id="cinematic-wrapper" class="relative" style="height:500vh; margin-top: 0; background-color: #090B10;">
 
-        {{-- Logo watermark --}}
-        <div class="pointer-events-none absolute top-6 left-6 z-20 select-none" aria-hidden="true">
-            <span class="font-display font-semibold tracking-[0.28em] text-xs text-white/40">YAZMAK</span>
+    {{-- ── Fixed Full-screen Backdrop (video + R3F layers) ── --}}
+    <div class="fixed inset-0 w-full h-screen z-0 overflow-hidden pointer-events-none"
+         style="top:0;left:0;">
+
+        {{-- Local 10-second scrubbed background video --}}
+        <video
+            id="scroll-journey-video"
+            src="/video/no_in_my_video_thers_no_charac.mp4"
+            muted
+            playsInline
+            preload="auto"
+            class="absolute inset-0 w-full h-full object-cover"
+            style="opacity:0.75;"
+        ></video>
+
+        {{-- Bottom blur mask — only blurs bottom 45% of frame --}}
+        <div class="absolute inset-0"
+             style="
+                backdrop-filter: blur(14px);
+                -webkit-backdrop-filter: blur(14px);
+                mask-image: linear-gradient(to top, black 0%, transparent 45%);
+                -webkit-mask-image: linear-gradient(to top, black 0%, transparent 45%);
+             ">
         </div>
 
-        {{-- Floating 3D-Projected Text Beats --}}
-        <div id="intro-beat-1" class="absolute z-30 pointer-events-none hidden select-none whitespace-nowrap text-center" style="opacity: 0;">
-            <p class="font-mono text-[1.1rem] uppercase tracking-[0.35em]" style="color:#7FAE9B;">Sanctuary</p>
-            <h2 class="font-display text-[3.6rem] md:text-[5.2rem] font-bold tracking-[0.18em] mt-3" style="color:#2C3436;">YAZMAK</h2>
-        </div>
+        {{-- R3F WebGL Canvas Mount --}}
+        <div id="home-intro-webgl-root" class="absolute inset-0 w-full h-full z-10"></div>
+    </div>
 
-        <div id="intro-beat-2" class="absolute z-30 pointer-events-none hidden select-none whitespace-nowrap text-center" style="opacity: 0;">
-            <p class="font-mono text-[1.1rem] uppercase tracking-[0.3em]" style="color:#5B8FB9;">I. Listen</p>
-            <h3 class="font-display text-[2.4rem] md:text-[2.8rem] font-medium tracking-wide mt-2" style="color:#2C3436;">Every journey begins with a safe space.</h3>
-        </div>
+    {{-- ── Sticky Viewport Panel (stays in view while scrolling through the 500vh) ── --}}
+    <div class="sticky top-0 h-screen w-full flex items-center justify-center z-20
+                pointer-events-none select-none overflow-hidden">
 
-        <div id="intro-beat-3" class="absolute z-30 pointer-events-none hidden select-none whitespace-nowrap text-center" style="opacity: 0;">
-            <p class="font-mono text-[1.1rem] uppercase tracking-[0.3em]" style="color:#7FAE9B;">II. Restore</p>
-            <h3 class="font-display text-[2.4rem] md:text-[2.8rem] font-medium tracking-wide mt-2" style="color:#2C3436;">Discovering quiet remedies for exhaustion.</h3>
-        </div>
+        {{-- SCENE 0: Landing Hero Text (visible at scroll start) --}}
+        <div id="scene-landing"
+             class="absolute inset-0 flex flex-col justify-center items-center text-center px-6">
+            <div class="max-w-4xl flex flex-col items-center gap-5">
 
-        <div id="intro-beat-4" class="absolute z-30 pointer-events-none hidden select-none whitespace-nowrap text-center" style="opacity: 0;">
-            <p class="font-mono text-[1.1rem] uppercase tracking-[0.3em]" style="color:#5B8FB9;">III. Heal</p>
-            <h3 class="font-display text-[2.4rem] md:text-[2.8rem] font-medium tracking-wide mt-2" style="color:#2C3436;">Restoring balance and emotional resilience.</h3>
-        </div>
+                {{-- Liquid glass eyebrow badge --}}
+                <div class="inline-flex items-center gap-2 rounded-full px-5 py-2
+                            border border-white/20 bg-white/10 backdrop-blur-md
+                            text-[#8FD3C7] text-xs font-semibold tracking-widest uppercase
+                            shadow-xl animate-fade-rise">
+                    A Safe Space to Begin Again
+                </div>
 
-        <div id="intro-beat-5" class="absolute z-30 pointer-events-none hidden select-none whitespace-nowrap text-center" style="opacity: 0;">
-            <p class="font-mono text-[1.1rem] uppercase tracking-[0.3em]" style="color:#7FAE9B;">IV. Live</p>
-            <h3 class="font-display text-[2.4rem] md:text-[2.8rem] font-medium tracking-wide mt-2" style="color:#2C3436;">Step back into a life of serenity.</h3>
-        </div>
+                {{-- Large serif headline --}}
+                <h1 class="font-heading text-5xl sm:text-7xl md:text-8xl lg:text-[6rem]
+                            font-normal leading-[0.9] tracking-tight text-white text-balance
+                            animate-fade-rise-delay drop-shadow-2xl">
+                    When your mind<br>
+                    <em class="italic text-[#8FD3C7]">needs a quiet place.</em>
+                </h1>
 
-        {{-- Scene dot navigation --}}
-        <div class="absolute right-6 top-1/2 -translate-y-1/2 z-30 flex flex-col gap-3" aria-hidden="true">
-            @foreach(['Sanctuary', 'Listen', 'Restore', 'Heal', 'Live'] as $i => $label)
-                <button
-                    class="journey-dot {{ $i === 0 ? 'is-active' : '' }}"
-                    title="{{ $label }}"
-                    aria-label="Jump to {{ $label }} scene"
-                ></button>
-            @endforeach
-        </div>
+                {{-- Subtitle --}}
+                <p class="max-w-xl text-sm md:text-base leading-relaxed text-white/75
+                           text-balance animate-fade-rise-delay-2">
+                    YAZMAK connects you with compassionate professionals —
+                    navigating exhaustion, anxiety &amp; depression through personalized guidance.
+                </p>
 
-        {{-- Scroll invite --}}
-        <div id="home-intro-scroll-cta" class="pointer-events-none absolute bottom-16 left-1/2 z-20 -translate-x-1/2 text-center select-none" aria-hidden="true">
-            <p class="font-mono text-[0.58rem] uppercase tracking-[0.22em] text-white/50">Scroll to journey</p>
-            <div class="mx-auto mt-2 h-7 w-[1px] bg-white/20 relative overflow-hidden">
-                <div class="absolute top-0 left-0 w-full h-1/2 bg-white/70 animate-[bounce_2.0s_ease-in-out_infinite]"></div>
+                {{-- Scroll indicator --}}
+                <div class="pt-4 flex flex-col items-center gap-3 animate-fade-rise-delay-2">
+                    <span class="font-mono text-[0.58rem] uppercase tracking-[0.3em] text-white/50">
+                        Scroll to explore
+                    </span>
+                    <div class="relative w-5 h-8 rounded-full border border-white/25 flex justify-center p-1">
+                        <div class="w-1 h-2 bg-[#8FD3C7] rounded-full animate-bounce"></div>
+                    </div>
+                </div>
+
             </div>
         </div>
 
-        {{-- Hairline journey progress bar --}}
-        <div class="absolute bottom-0 left-0 right-0 z-20 h-[2px] w-full bg-white/10 select-none" aria-hidden="true">
-            <div id="home-intro-progress" class="h-full w-0 transition-all duration-100 ease-out" style="background: linear-gradient(90deg, rgba(107,191,181,.9), rgba(242,196,168,.9));"></div>
-        </div>
-
-        {{-- Skip button --}}
-        <div class="absolute top-6 right-16 z-30 select-none">
-            <button
-                id="canvas-intro-skip"
-                class="js-skip-intro font-mono text-[0.60rem] uppercase tracking-[0.18em] border border-white/15 rounded-full px-5 py-2 hover:bg-white/10 transition-all cursor-pointer opacity-80 text-white/70 hover:text-white hover:opacity-100"
-                aria-label="Skip the intro"
-            >
-                Skip intro
-            </button>
-        </div>
-
-        {{-- Mobile skip --}}
-        <div class="absolute bottom-20 right-4 z-30 select-none md:hidden">
-            <button
-                id="canvas-intro-skip-mobile"
-                class="js-skip-intro font-mono text-[0.58rem] uppercase tracking-[0.15em] text-white/50 py-2 px-3"
-                aria-label="Skip intro"
-            >Skip ›</button>
-        </div>
-
-        {{-- Final scene overlay — fades in with sunrise reveal --}}
-        <div
-            id="journey-final-overlay"
-            class="absolute inset-0 z-40 flex flex-col items-center justify-center text-center px-6 pointer-events-none"
-            style="opacity: 0; background: linear-gradient(to top, rgba(254,253,251,.72) 0%, rgba(254,253,251,.22) 60%, transparent 100%);"
-            aria-live="polite"
-        >
-            <p class="eyebrow mb-5 text-[0.68rem]" style="color:rgba(107,191,181,0.9);">A New Day</p>
-            <h2 class="gradient-title text-[2.4rem] md:text-[3.5rem] leading-tight mb-4 text-balance" style="color:#2D3B3A;">
-                You don't have to carry it <em>alone.</em>
-            </h2>
-            <p class="text-[1.05rem] max-w-md mx-auto mb-8 text-balance" style="color:rgba(45,59,58,.72);">
-                Calm, confidential guidance for those navigating exhaustion, anxiety, and emotional overwhelm.
-            </p>
-            <a
-                href="#hero"
-                class="gradient-button rounded-full px-8 py-3 text-sm pointer-events-auto"
-                id="journey-begin-cta"
-                aria-label="Begin your journey to wellness"
-            >
-                Find Your Support
-            </a>
-        </div>
     </div>
 </div>
+
+{{-- ── Progress-driven scene labels (pure JS renders these) ── --}}
 
 
 
@@ -166,17 +128,13 @@
      § HERO
      Primary introduction with name, profession, description,
      and an interactive "creative process" panel.
-     
-     NOTE: margin-top: -100vh and z-[110] pull the hero up so it overlaps 
-     the end of the intro, allowing it to slide up as a premium overlay curtain
-     and preventing any black blank screen gaps.
      ═══════════════════════════════════════════════════════════════════ --}}
 
 <section
     id="hero"
     x-data="{ mode: 'Draft' }"
     class="page-section relative z-[110] overflow-hidden border-b"
-    style="border-color:var(--line); background: var(--ink-950); margin-top: -100vh;"
+    style="border-color:var(--line); background: var(--ink-950);"
 >
     <div class="mx-auto max-w-7xl px-5 lg:px-8">
         <div class="grid items-center gap-14 lg:grid-cols-[1.1fr_0.9fr] lg:gap-20">

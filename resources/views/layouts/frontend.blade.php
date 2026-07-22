@@ -9,7 +9,7 @@
     {{-- Performance: preconnect to font origin before the stylesheet request --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&family=Manrope:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&family=Manrope:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital,wght@0,400;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
     @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/webgl-journey.js'])
 
@@ -72,12 +72,17 @@
            § 2 — Base & Reset
            ═══════════════════════════════════════════════════════════ */
         html {
-            background: var(--ink-950);
+            background: transparent;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
 
-        /* Lenis Smooth Scroll resets */
+        /* During the cinematic scroll section, body and site-shell are transparent
+           so the fixed video + R3F canvas can show through fully */
+        body {
+            background: transparent;
+        }
+
         html.lenis, html.lenis body {
             height: auto;
         }
@@ -201,12 +206,7 @@
             position: relative;
             min-height: 100vh;
             min-height: 100dvh;
-            background:
-                radial-gradient(ellipse at 10% 12%, rgba(127,174,155,.07), transparent 44rem),
-                radial-gradient(ellipse at 90% 18%, rgba(91,143,185,.05), transparent 40rem),
-                radial-gradient(ellipse at 50% 90%, rgba(242,201,182,.04), transparent 36rem),
-                radial-gradient(ellipse at 72% 55%, rgba(232,197,122,.04), transparent 32rem),
-                linear-gradient(180deg, var(--ink-850) 0%, var(--ink-950) 100%);
+            background: transparent; /* Cinematic canvas shows through; sections have their own bg */
         }
 
         .page-section {
@@ -727,6 +727,15 @@
     class="antialiased @yield('body_class')"
 >
 
+    @php
+        $navLinks = [
+            ['label' => 'Home',     'route' => 'home'],
+            ['label' => 'About',    'route' => 'about'],
+            ['label' => 'Projects', 'route' => 'projects'],
+            ['label' => 'Contact',  'route' => 'contact'],
+        ];
+    @endphp
+
     {{-- ─── Page Loader ──────────────────────────────────────────── --}}
     <div id="page-loader" class="page-loader" aria-hidden="true">
         <div class="loader-pulse">
@@ -739,157 +748,6 @@
 
     {{-- ─── Site Shell ───────────────────────────────────────────── --}}
     <div class="site-shell">
-
-        {{-- ═══════════════════════════════════════════════════════════
-             HEADER (Slimmer, centered layout preventing middle shift wiggles)
-             ═══════════════════════════════════════════════════════════ --}}
-        <header
-            :class="{ 'is-scrolled': scrolled }"
-            class="site-header"
-        >
-            <nav class="mx-auto flex max-w-7xl items-center justify-between px-5 py-2.5 lg:px-8 relative">
-
-                {{-- Left Logo --}}
-                <a href="{{ route('home') }}" class="logo-group flex items-center gap-3" aria-label="Yazmak — go to homepage">
-                    <span class="logo-mark">Y</span>
-                    <span>
-                        <span class="block text-[.90rem] font-semibold leading-none tracking-wide" style="color:var(--paper);">Yazmak</span>
-                        <span class="font-mono mt-0.5 block text-[.58rem] uppercase tracking-[.16em]" style="color:var(--slate);">Written &amp; Built</span>
-                    </span>
-                </a>
-
-                {{-- Desktop Navigation (Strictly Centered Absolute Position to prevent OCD wiggles) --}}
-                @php
-                    $navLinks = [
-                        ['label' => 'Home',     'route' => 'home'],
-                        ['label' => 'About',    'route' => 'about'],
-                        ['label' => 'Projects', 'route' => 'projects'],
-                        ['label' => 'Contact',  'route' => 'contact'],
-                    ];
-                @endphp
-
-                <div id="desktop-nav" class="hidden items-center gap-1 lg:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                    @foreach($navLinks as $link)
-                        <a
-                            href="{{ route($link['route']) }}"
-                            class="nav-link {{ request()->routeIs($link['route']) ? 'is-active' : '' }}"
-                        >
-                            {{ $link['label'] }}
-                        </a>
-                    @endforeach
-                </div>
-
-                {{-- Desktop Actions & Dynamic Skip Button (Fades seamlessly over each other) --}}
-                <div class="hidden items-center lg:flex relative h-10 w-64 justify-end">
-                    <div class="site-header-actions">
-                        @auth
-                            <a href="{{ route('admin.dashboard') }}" class="ghost-button rounded px-4 py-2 text-xs">Dashboard</a>
-                        @else
-                            <a href="{{ route('login') }}" class="ghost-button rounded px-4 py-2 text-xs">Login</a>
-                        @endauth
-                        <a href="{{ route('contact') }}" class="accent-button rounded px-5 py-2.5 text-xs">Book Appointment</a>
-                    </div>
-
-                    @if(request()->routeIs('home'))
-                    <button
-                        type="button"
-                        id="header-intro-skip"
-                        class="js-skip-intro site-header-skip ghost-button rounded px-4 py-2 text-[.68rem]"
-                    >
-                        Skip intro
-                    </button>
-                    @endif
-                </div>
-
-                {{-- Mobile Skip & Toggle --}}
-                <div class="flex items-center lg:hidden relative h-10 w-24 justify-end">
-                    @if(request()->routeIs('home'))
-                    <button
-                        type="button"
-                        id="header-intro-skip-mobile"
-                        class="js-skip-intro site-header-skip ghost-button mr-2 rounded px-3 py-1.5 text-[.6rem]"
-                    >
-                        Skip
-                    </button>
-                    @endif
-
-                    <button
-                        type="button"
-                        @click="mobileOpen = !mobileOpen"
-                        class="nav-mobile-toggle-btn relative z-[210] flex h-10 w-10 flex-col items-center justify-center gap-0 rounded"
-                        style="border:1px solid var(--line-strong);"
-                        aria-label="Toggle navigation menu"
-                        :aria-expanded="mobileOpen"
-                    >
-                        <span
-                            class="nav-toggle-line"
-                            :class="mobileOpen ? 'translate-y-[3.25px] rotate-45' : ''"
-                        ></span>
-                        <span
-                            class="nav-toggle-line line-short"
-                            :class="mobileOpen ? 'opacity-0 scale-x-0' : ''"
-                        ></span>
-                        <span
-                            class="nav-toggle-line"
-                            :class="mobileOpen ? '-translate-y-[3.25px] -rotate-45' : ''"
-                        ></span>
-                    </button>
-                </div>
-
-            </nav>
-        </header>
-
-
-        {{-- ═══════════════════════════════════════════════════════════
-             MOBILE MENU — full-screen overlay
-             ═══════════════════════════════════════════════════════════ --}}
-        <div
-            x-show="mobileOpen"
-            x-transition:enter="transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"
-            x-transition:enter-start="opacity-0"
-            x-transition:enter-end="opacity-100"
-            x-transition:leave="transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)]"
-            x-transition:leave-start="opacity-100"
-            x-transition:leave-end="opacity-0"
-            x-cloak
-            class="mobile-menu fixed inset-0 z-[200] flex flex-col lg:hidden"
-        >
-            <div class="flex flex-1 flex-col items-center justify-center gap-6 px-8">
-                @foreach($navLinks as $i => $link)
-                    <a
-                        href="{{ route($link['route']) }}"
-                        class="mobile-nav-link mobile-stagger {{ request()->routeIs($link['route']) ? 'is-active' : '' }}"
-                        style="--i:{{ $i }}"
-                        :class="mobileOpen ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'"
-                    >
-                        {{ $link['label'] }}
-                    </a>
-                @endforeach
-
-                <div class="mobile-stagger mt-4 h-px w-16" style="background:var(--line-strong); --i:4"></div>
-
-                <div
-                    class="mobile-stagger flex flex-col items-center gap-4"
-                    style="--i:5"
-                    :class="mobileOpen ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'"
-                >
-                    @auth
-                        <a href="{{ route('admin.dashboard') }}" class="ghost-button rounded px-6 py-3 text-sm">Dashboard</a>
-                    @else
-                        <a href="{{ route('login') }}" class="ghost-button rounded px-6 py-3 text-sm">Login</a>
-                    @endauth
-                    <a href="{{ route('contact') }}" class="accent-button rounded px-8 py-3 text-sm">Book Appointment</a>
-                </div>
-            </div>
-
-            <div class="mobile-stagger px-8 pb-8 text-center" style="--i:6"
-                 :class="mobileOpen ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'">
-                <p class="font-mono text-[.65rem] uppercase tracking-[.14em]" style="color:var(--slate);">
-                    &copy; {{ date('Y') }} Yazmak
-                </p>
-            </div>
-        </div>
-
 
         {{-- ═══════════════════════════════════════════════════════════
              MAIN CONTENT
