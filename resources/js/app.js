@@ -1,5 +1,4 @@
 import './bootstrap';
-
 import Alpine from 'alpinejs';
 import Lenis from '@studio-freight/lenis';
 import gsap from 'gsap';
@@ -38,9 +37,23 @@ document.addEventListener('DOMContentLoaded', () => {
         // Pause immediately — we scrub manually via currentTime
         video.pause();
 
-        const scrub = (scrollY) => {
+        // Surface load failures (bad codec, 404, etc.) instead of failing silently
+        video.addEventListener('error', () => {
+            console.error('[scroll-journey-video] failed to load:', video.error);
+        });
+
+        const scrub = () => {
             const wrapper = document.getElementById('cinematic-wrapper');
             if (!wrapper) return;
+
+            // Read the real scroll position directly rather than trusting the
+            // shape of whatever Lenis passes to its 'scroll' callback — that
+            // payload has changed shape across Lenis versions, and destructuring
+            // a missing `scroll` key here previously produced NaN, which throws
+            // when assigned to video.currentTime (silently, on every scroll
+            // tick) and left the video stuck on its first frame forever.
+            const scrollY = window.scrollY ?? window.pageYOffset ?? 0;
+
             const start = wrapper.offsetTop;
             const height = wrapper.offsetHeight - window.innerHeight;
             const progress = Math.max(0, Math.min(1, (scrollY - start) / Math.max(height, 1)));
@@ -48,19 +61,23 @@ document.addEventListener('DOMContentLoaded', () => {
             // Broadcast to React camera spline
             window.dispatchEvent(new CustomEvent('cinematic-scroll', { detail: { progress } }));
 
-            // Set video frame
+            // Set video frame — only if we land on a real, finite time
             if (!isNaN(video.duration) && video.duration > 0) {
-                video.currentTime = progress * video.duration;
+                const t = progress * video.duration;
+                if (Number.isFinite(t)) {
+                    video.currentTime = t;
+                }
             }
         };
 
-        // When metadata loads, show the first frame
+        // When metadata loads, show the first frame and sync to current scroll
         video.addEventListener('loadedmetadata', () => {
             video.currentTime = 0;
+            scrub();
         }, { once: true });
 
-        // Also trigger on Lenis scroll
-        lenis.on('scroll', ({ scroll }) => scrub(scroll));
+        // Trigger on every Lenis scroll tick (ignore its event payload — see above)
+        lenis.on('scroll', scrub);
 
         // Force load the video file
         video.load();
