@@ -562,6 +562,15 @@
             transition: opacity var(--duration-slower) ease;
         }
         .home-intro canvas.is-ready { opacity: 1; }
+        
+        #home-intro-webgl-root canvas {
+            display: block;
+            width: 100% !important;
+            height: 100% !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+        }
 
         /* Desktop nav / mobile toggle during intro */
         /* Staggered header reveal transitions mimicking particle assembly */
