@@ -8,6 +8,11 @@ use App\Models\Skill;
 
 class FrontendController extends Controller
 {
+    public function landing()
+    {
+        return view('frontend.landing');
+    }
+
     public function home()
     {
         $about = About::first();

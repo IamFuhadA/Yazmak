@@ -9,7 +9,8 @@ use App\Http\Controllers\ContactController;
 use Illuminate\Support\Facades\Route;
 
 // Frontend
-Route::get('/', [FrontendController::class, 'home'])->name('home');
+Route::get('/', [FrontendController::class, 'landing'])->name('landing');
+Route::get('/home', [FrontendController::class, 'home'])->name('home');
 Route::get('/about', [FrontendController::class, 'about'])->name('about');
 Route::get('/projects', [FrontendController::class, 'projects'])->name('projects');
 Route::get('/contact', [FrontendController::class, 'contact'])
