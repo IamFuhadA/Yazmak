@@ -37,10 +37,31 @@ document.addEventListener('DOMContentLoaded', () => {
         const wrapper = document.getElementById('cinematic-wrapper');
         if (!video || !wrapper) return; // not on the landing page
 
-        video.pause(); // we scrub manually via currentTime
+        // Safari (desktop + iOS) silently ignores currentTime scrubs on a
+        // video that has never played. A single muted play/pause primes the
+        // decoder so later frame-seeks actually paint. This is a no-op on
+        // browsers that don't need it.
+        const primeVideo = () => {
+            const playAttempt = video.play();
+            if (playAttempt && typeof playAttempt.then === 'function') {
+                playAttempt.then(() => video.pause()).catch(() => {
+                    /* autoplay was blocked; scrubbing still works on most browsers */
+                });
+            } else {
+                video.pause();
+            }
+        };
+        primeVideo();
 
+        let hasPaintedFrame = false;
         video.addEventListener('error', () => {
             console.error('[scroll-journey-video] failed to load:', video.error);
+        });
+        video.addEventListener('seeked', () => {
+            if (!hasPaintedFrame) {
+                hasPaintedFrame = true;
+                video.classList.add('is-ready'); // swap the poster out for the live frame
+            }
         });
 
         const setFrame = (progress) => {
@@ -48,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
             window.dispatchEvent(new CustomEvent('cinematic-scroll', { detail: { progress } }));
 
             if (!isNaN(video.duration) && video.duration > 0) {
-                const t = progress * video.duration;
+                const t = Math.min(video.duration, Math.max(0, progress * video.duration));
                 if (Number.isFinite(t)) {
                     video.currentTime = t;
                 }

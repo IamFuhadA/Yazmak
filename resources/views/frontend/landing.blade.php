@@ -29,6 +29,8 @@
     ];
 
     $mainSiteLabel = 'Home';
+    $journeyVideoSrc = asset('video/landing-journey.mp4');
+    $journeyPoster = asset('images/landing/journey-poster.jpg');
 @endphp
 
 @push('head')
@@ -110,6 +112,61 @@
         transform: scaleY(var(--landing-scroll-progress, 0));
         transform-origin: top;
     }
+
+    /* Poster shows the instant the section mounts; once the scrubbed video
+       reports a real frame it fades away so there's never a blank/black gap. */
+    #scroll-journey-video {
+        background: #000 center / cover no-repeat;
+        background-image: url('{{ $journeyPoster }}');
+    }
+
+    #scroll-journey-video.is-ready {
+        background-image: none;
+    }
+
+    /* Quiet scroll cue on the hero — the only signal that a second act
+       exists below the fold. Hidden once the visitor has scrolled. */
+    .landing-scroll-cue {
+        opacity: 1;
+        transition: opacity .4s ease;
+    }
+
+    .landing-scroll-cue.is-hidden {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    @keyframes landing-scroll-cue-drift {
+        0%, 100% { transform: translateY(0); opacity: .55; }
+        50% { transform: translateY(6px); opacity: 1; }
+    }
+
+    .landing-scroll-cue-icon {
+        animation: landing-scroll-cue-drift 2.2s ease-in-out infinite;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .landing-train-bob,
+        .landing-scroll-cue-icon {
+            animation: none !important;
+        }
+
+        .landing-scroll-progress {
+            transition: none !important;
+        }
+    }
+
+    .landing-sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
 </style>
 @endpush
 
@@ -118,10 +175,14 @@
     x-data="{
         activeVideo: 0,
         videoCount: {{ count($videos) }},
+        scrolled: false,
         init() {
             setInterval(() => {
                 this.activeVideo = (this.activeVideo + 1) % this.videoCount;
             }, 5000);
+            window.addEventListener('scroll', () => {
+                this.scrolled = window.scrollY > 40;
+            }, { passive: true });
         }
     }"
     class="relative h-screen w-full overflow-hidden bg-black"
@@ -134,12 +195,16 @@
                 muted
                 loop
                 playsinline
+                disablePictureInPicture
+                disableRemotePlayback
                 preload="{{ $index === 0 ? 'auto' : 'metadata' }}"
+                aria-hidden="true"
                 class="absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ease-in-out"
                 :class="activeVideo === {{ $index }} ? 'opacity-100' : 'opacity-0'"
             ></video>
         @endforeach
         <div class="absolute inset-0 bg-black/25"></div>
+        <p class="landing-sr-only" role="status" x-text="'Ambient background: ' + {{ json_encode(array_column($videos, 'label')) }}[activeVideo]"></p>
     </div>
 
     <img
@@ -196,6 +261,18 @@
 
             </div>
         </div>
+
+        <a
+            href="#cinematic-wrapper"
+            class="landing-scroll-cue absolute bottom-6 left-1/2 z-[2] flex -translate-x-1/2 flex-col items-center gap-2 text-white/70 sm:bottom-8"
+            :class="scrolled ? 'is-hidden' : ''"
+            aria-label="Scroll to continue"
+        >
+            <span class="landing-body-font text-[0.62rem] font-semibold uppercase tracking-[0.25em]">Scroll</span>
+            <svg class="landing-scroll-cue-icon h-4 w-4" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M3 6L8 11L13 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </a>
     </div>
 </section>
 
@@ -203,10 +280,14 @@
     <div class="sticky top-0 h-screen w-full overflow-hidden">
         <video
             id="scroll-journey-video"
-            src="/video/no_in_my_video_thers_no_charac.mp4"
+            src="{{ $journeyVideoSrc }}"
+            poster="{{ $journeyPoster }}"
             muted
             playsinline
+            disablePictureInPicture
+            disableRemotePlayback
             preload="auto"
+            aria-hidden="true"
             class="absolute inset-0 h-full w-full object-cover"
         ></video>
 
@@ -265,7 +346,9 @@
     </div>
 </section>
 
-<section class="landing-body-font bg-black px-5 py-16 text-center text-white">
+<section class="landing-body-font flex flex-col items-center gap-5 bg-black px-5 py-20 text-center text-white">
+    <div class="h-px w-12" style="background: rgba(255,255,255,0.2);"></div>
+    <p class="text-[0.62rem] font-semibold uppercase tracking-[0.3em] text-white/45">The journey continues</p>
     <a
         href="{{ route('home') }}"
         class="inline-flex rounded-full bg-white px-7 py-3 text-sm font-semibold text-[#182C41] transition hover:bg-white/90"
