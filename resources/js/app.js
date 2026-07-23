@@ -30,7 +30,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ─── Video Scroll Scrubber (landing page only) ─────────────────────────
     // Ties the hero video's currentTime directly to a ScrollTrigger instance
-    // pinned to #cinematic-wrapper's scroll range.
+    // pinned to #cinematic-wrapper's 500vh scroll range, instead of hand-
+    // rolling scroll-position math off window.scrollY.
     const initVideo = () => {
         const video = document.getElementById('scroll-journey-video');
         const wrapper = document.getElementById('cinematic-wrapper');
@@ -46,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Broadcast to React camera spline
             window.dispatchEvent(new CustomEvent('cinematic-scroll', { detail: { progress } }));
 
-            if (video && !isNaN(video.duration) && video.duration > 0) {
+            if (!isNaN(video.duration) && video.duration > 0) {
                 const t = progress * video.duration;
                 if (Number.isFinite(t)) {
                     video.currentTime = t;
@@ -54,17 +55,48 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
-        // Create the ScrollTrigger immediately so it works even if metadata is already loaded
-        const scrollTrigger = ScrollTrigger.create({
-            trigger: wrapper,
-            start: 'top top',
-            end: 'bottom bottom',
-            scrub: true,
-            onUpdate: (self) => setFrame(self.progress),
+        // When metadata loads, show the first frame then build the trigger
+        // Initialize step states
+        gsap.set(['#landing-journey-step-1', '#landing-journey-step-2', '#landing-journey-step-3'], {
+            y: 30,
+            opacity: 0,
         });
 
+        // Create the ScrollTrigger-driven Timeline
+        const tl = gsap.timeline({
+            scrollTrigger: {
+                trigger: wrapper,
+                start: 'top top',
+                end: 'bottom bottom',
+                scrub: true,
+                onUpdate: (self) => {
+                    setFrame(self.progress);
+                    
+                    // Update the visual scroll progress bar
+                    const progressBar = document.getElementById('landing-scroll-progress');
+                    if (progressBar) {
+                        progressBar.style.setProperty('--landing-scroll-progress', self.progress);
+                    }
+                },
+            }
+        });
+
+        // Step 1: In from 0.05 to 0.15, Out from 0.25 to 0.35
+        tl.to('#landing-journey-step-1', { opacity: 1, y: 0, duration: 0.1, ease: 'power2.out' }, 0.05)
+          .to('#landing-journey-step-1', { opacity: 0, y: -30, duration: 0.1, ease: 'power2.in' }, 0.25);
+
+        // Step 2: In from 0.38 to 0.48, Out from 0.58 to 0.68
+        tl.to('#landing-journey-step-2', { opacity: 1, y: 0, duration: 0.1, ease: 'power2.out' }, 0.38)
+          .to('#landing-journey-step-2', { opacity: 0, y: -30, duration: 0.1, ease: 'power2.in' }, 0.58);
+
+        // Step 3: In from 0.72 to 0.82, Out from 0.92 to 1.00
+        tl.to('#landing-journey-step-3', { opacity: 1, y: 0, duration: 0.1, ease: 'power2.out' }, 0.72)
+          .to('#landing-journey-step-3', { opacity: 0, y: -30, duration: 0.08, ease: 'power2.in' }, 0.92);
+
         const syncInitialFrame = () => {
-            setFrame(scrollTrigger.progress);
+            if (tl.scrollTrigger) {
+                setFrame(tl.scrollTrigger.progress);
+            }
         };
 
         if (video.readyState >= 1) {
@@ -73,41 +105,74 @@ document.addEventListener('DOMContentLoaded', () => {
             video.addEventListener('loadedmetadata', syncInitialFrame, { once: true });
         }
 
-        // Just in case metadata loaded but readyState is not updated, or to force a check
         video.addEventListener('durationchange', syncInitialFrame);
     };
 
     initVideo();
 
-    // ─── Landing Hero Copy Scroll Fade (landing page only) ───────────────────
-    const heroCopy = document.getElementById('scene-landing-hero');
-    if (heroCopy) {
-        gsap.to(heroCopy, {
-            scrollTrigger: {
-                trigger: '#cinematic-wrapper',
-                start: 'top top',
-                end: 'top -25%',
-                scrub: true,
-            },
-            opacity: 0,
-            y: -50,
-            pointerEvents: 'none',
-        });
-    }
+    // ─── Word Pull-Up (single style) ────────────────────────────────────────
+    // Splits an element's text into words, wraps each for a clipped slide-up
+    // reveal, staggered — the landing hero headline uses this.
+    gsap.utils.toArray('[data-pullup]').forEach((el) => {
+        const words = el.textContent.trim().split(/\s+/);
+        el.innerHTML = words
+            .map((w) => `<span class="inline-block overflow-hidden"><span class="inline-block pullup-word">${w}</span></span>`)
+            .join(' ');
 
-    // ─── Cinematic Settle Listeners (landing page only) ──────────────────────
-    window.addEventListener('cinematic-settled', () => {
-        const followSection = document.getElementById('landing-follow');
-        if (followSection) {
-            followSection.classList.add('is-visible');
-        }
+        gsap.fromTo(el.querySelectorAll('.pullup-word'),
+            { y: 24, opacity: 0 },
+            {
+                y: 0,
+                opacity: 1,
+                duration: 0.6,
+                ease: 'power3.out',
+                stagger: 0.08,
+                scrollTrigger: { trigger: el, start: 'top 85%', toggleActions: 'play none none none' }
+            }
+        );
     });
 
-    window.addEventListener('cinematic-unsettled', () => {
-        const followSection = document.getElementById('landing-follow');
-        if (followSection) {
-            followSection.classList.remove('is-visible');
-        }
+    // ─── Word Pull-Up (multi-style segments) ────────────────────────────────
+    // data-segments = JSON array of { text, class?, style? } — each segment
+    // keeps its own class/style while all words share one stagger sequence.
+    gsap.utils.toArray('[data-segments]').forEach((el) => {
+        const segments = JSON.parse(el.dataset.segments);
+        let html = '';
+        segments.forEach((seg) => {
+            seg.text.split(/\s+/).forEach((w) => {
+                const cls = seg.class ? ` ${seg.class}` : '';
+                const style = seg.style ? ` style="${seg.style}"` : '';
+                html += `<span class="inline-block overflow-hidden mr-[0.28em]"><span class="inline-block pullup-word${cls}"${style}>${w}</span></span>`;
+            });
+        });
+        el.innerHTML = html;
+
+        gsap.fromTo(el.querySelectorAll('.pullup-word'),
+            { y: 24, opacity: 0 },
+            {
+                y: 0,
+                opacity: 1,
+                duration: 0.6,
+                ease: 'power3.out',
+                stagger: 0.08,
+                scrollTrigger: { trigger: el, start: 'top 85%', toggleActions: 'play none none none' }
+            }
+        );
+    });
+
+    // ─── Scroll-linked Letter Reveal ─────────────────────────────────────────
+    // Splits text into characters; each fades from 0.2 → 1 opacity as the
+    // element crosses its scroll window — a progressive "read as you scroll" effect.
+    gsap.utils.toArray('[data-letter-reveal]').forEach((el) => {
+        const chars = el.textContent.split('').map((c) => (c === ' ' ? '&nbsp;' : c));
+        el.innerHTML = chars.map((c) => `<span class="letter" style="opacity:.2;">${c}</span>`).join('');
+
+        gsap.to(el.querySelectorAll('.letter'), {
+            opacity: 1,
+            stagger: 0.02,
+            ease: 'none',
+            scrollTrigger: { trigger: el, start: 'top 80%', end: 'top 20%', scrub: true }
+        });
     });
 
     // ─── Scroll Reveal ──────────────────────────────────────────────────────

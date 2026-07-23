@@ -10,7 +10,9 @@ class FrontendController extends Controller
 {
     public function landing()
     {
-        return view('frontend.landing');
+        $about = About::first();
+
+        return view('frontend.landing', compact('about'));
     }
 
     public function home()

@@ -35,11 +35,8 @@
 
 
 {{-- ═══════════════════════════════════════════════════════════════════
-     § HERO
-     Primary introduction with name, profession, description,
-     and an interactive "creative process" panel.
+     § HERO — original text + process panel (kept as a second section)
      ═══════════════════════════════════════════════════════════════════ --}}
-
 <section
     id="hero"
     x-data="{ mode: 'Draft' }"

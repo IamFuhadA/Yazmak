@@ -563,7 +563,8 @@
         }
         .home-intro canvas.is-ready { opacity: 1; }
         
-        #home-intro-webgl-root canvas {
+        #home-intro-webgl-root canvas,
+        #home-3d-root canvas {
             display: block;
             width: 100% !important;
             height: 100% !important;
