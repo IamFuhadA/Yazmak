@@ -11,6 +11,7 @@ export default function ScrollController() {
 
     // Live scroll progress ref — written by the cinematic-scroll event
     const progressRef = useRef(0);
+    const hasSettledRef = useRef(false);
 
     // ── 1. Subscribe to Lenis scroll event broadcast from app.js ──────────
     useEffect(() => {
@@ -95,9 +96,25 @@ export default function ScrollController() {
         const targetPos = cameraPath.getPointAt(p);
         const targetLook = lookAtPath.getPointAt(p);
 
+        // Slow down camera movement at the end of the scroll range (p > 0.95) to drift gently
+        const lerpFactor = p > 0.95 ? 1.2 : 3.5;
+
         // Lerp position smoothly
-        camera.position.lerp(targetPos, delta * 3.5);
+        camera.position.lerp(targetPos, delta * lerpFactor);
         camera.lookAt(targetLook);
+
+        // Monitor camera settle state at the end of the scroll range
+        if (p >= 0.98 && !hasSettledRef.current) {
+            const distance = camera.position.distanceTo(targetPos);
+            if (distance < 0.5) { // camera has settled
+                hasSettledRef.current = true;
+                window.dispatchEvent(new CustomEvent('cinematic-settled'));
+            }
+        } else if (p < 0.95 && hasSettledRef.current) {
+            // Reset if user scrolls back up
+            hasSettledRef.current = false;
+            window.dispatchEvent(new CustomEvent('cinematic-unsettled'));
+        }
     });
 
     return null;

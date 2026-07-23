@@ -617,6 +617,38 @@
         html.reveal-ui #desktop-nav .nav-link:nth-child(3) { transition-delay: 260ms; }
         html.reveal-ui #desktop-nav .nav-link:nth-child(4) { transition-delay: 340ms; }
 
+        /* Subtle Skip Button & Minimal Header UI during cinematic */
+        html:not(.reveal-ui):not(.intro-complete) .site-header {
+            background: transparent !important;
+            border-bottom: none !important;
+            box-shadow: none !important;
+        }
+
+        html:not(.reveal-ui):not(.intro-complete) .site-header-skip {
+            opacity: 0.35 !important;
+            pointer-events: auto !important;
+            transition: opacity 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.25) !important;
+            background: rgba(255, 255, 255, 0.05) !important;
+            color: rgba(255, 255, 255, 0.8) !important;
+        }
+        html:not(.reveal-ui):not(.intro-complete) .site-header-skip:hover {
+            opacity: 0.9 !important;
+            border-color: rgba(255, 255, 255, 0.6) !important;
+            background: rgba(255, 255, 255, 0.15) !important;
+            color: #FFFFFF !important;
+        }
+
+        /* Final section fade and enter button transitions */
+        #landing-follow.is-visible {
+            opacity: 1 !important;
+            transform: translateY(0) !important;
+            pointer-events: auto !important;
+        }
+        #landing-follow.is-visible #enter-btn-wrapper {
+            opacity: 1 !important;
+            transform: translateY(0) !important;
+        }
 
         /* Scene dot indicators */
         .journey-dot {

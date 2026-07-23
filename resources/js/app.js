@@ -28,41 +28,25 @@ document.addEventListener('DOMContentLoaded', () => {
     gsap.ticker.add((time) => { lenis.raf(time * 1000); });
     gsap.ticker.lagSmoothing(0);
 
-    // ─── Video Scroll Scrubber ──────────────────────────────────────────────
-    // Initialize video: force load then enable scrubbing once metadata is ready.
+    // ─── Video Scroll Scrubber (landing page only) ─────────────────────────
+    // Ties the hero video's currentTime directly to a ScrollTrigger instance
+    // pinned to #cinematic-wrapper's scroll range.
     const initVideo = () => {
         const video = document.getElementById('scroll-journey-video');
-        if (!video) return;
+        const wrapper = document.getElementById('cinematic-wrapper');
+        if (!video || !wrapper) return; // not on the landing page
 
-        // Pause immediately — we scrub manually via currentTime
-        video.pause();
+        video.pause(); // we scrub manually via currentTime
 
-        // Surface load failures (bad codec, 404, etc.) instead of failing silently
         video.addEventListener('error', () => {
             console.error('[scroll-journey-video] failed to load:', video.error);
         });
 
-        const scrub = () => {
-            const wrapper = document.getElementById('cinematic-wrapper');
-            if (!wrapper) return;
-
-            // Read the real scroll position directly rather than trusting the
-            // shape of whatever Lenis passes to its 'scroll' callback — that
-            // payload has changed shape across Lenis versions, and destructuring
-            // a missing `scroll` key here previously produced NaN, which throws
-            // when assigned to video.currentTime (silently, on every scroll
-            // tick) and left the video stuck on its first frame forever.
-            const scrollY = window.scrollY ?? window.pageYOffset ?? 0;
-
-            const start = wrapper.offsetTop;
-            const height = wrapper.offsetHeight - window.innerHeight;
-            const progress = Math.max(0, Math.min(1, (scrollY - start) / Math.max(height, 1)));
-
+        const setFrame = (progress) => {
             // Broadcast to React camera spline
             window.dispatchEvent(new CustomEvent('cinematic-scroll', { detail: { progress } }));
 
-            // Set video frame — only if we land on a real, finite time
-            if (!isNaN(video.duration) && video.duration > 0) {
+            if (video && !isNaN(video.duration) && video.duration > 0) {
                 const t = progress * video.duration;
                 if (Number.isFinite(t)) {
                     video.currentTime = t;
@@ -70,20 +54,61 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
-        // When metadata loads, show the first frame and sync to current scroll
-        video.addEventListener('loadedmetadata', () => {
-            video.currentTime = 0;
-            scrub();
-        }, { once: true });
+        // Create the ScrollTrigger immediately so it works even if metadata is already loaded
+        const scrollTrigger = ScrollTrigger.create({
+            trigger: wrapper,
+            start: 'top top',
+            end: 'bottom bottom',
+            scrub: true,
+            onUpdate: (self) => setFrame(self.progress),
+        });
 
-        // Trigger on every Lenis scroll tick (ignore its event payload — see above)
-        lenis.on('scroll', scrub);
+        const syncInitialFrame = () => {
+            setFrame(scrollTrigger.progress);
+        };
 
-        // Force load the video file
-        video.load();
+        if (video.readyState >= 1) {
+            syncInitialFrame();
+        } else {
+            video.addEventListener('loadedmetadata', syncInitialFrame, { once: true });
+        }
+
+        // Just in case metadata loaded but readyState is not updated, or to force a check
+        video.addEventListener('durationchange', syncInitialFrame);
     };
 
     initVideo();
+
+    // ─── Landing Hero Copy Scroll Fade (landing page only) ───────────────────
+    const heroCopy = document.getElementById('scene-landing-hero');
+    if (heroCopy) {
+        gsap.to(heroCopy, {
+            scrollTrigger: {
+                trigger: '#cinematic-wrapper',
+                start: 'top top',
+                end: 'top -25%',
+                scrub: true,
+            },
+            opacity: 0,
+            y: -50,
+            pointerEvents: 'none',
+        });
+    }
+
+    // ─── Cinematic Settle Listeners (landing page only) ──────────────────────
+    window.addEventListener('cinematic-settled', () => {
+        const followSection = document.getElementById('landing-follow');
+        if (followSection) {
+            followSection.classList.add('is-visible');
+        }
+    });
+
+    window.addEventListener('cinematic-unsettled', () => {
+        const followSection = document.getElementById('landing-follow');
+        if (followSection) {
+            followSection.classList.remove('is-visible');
+        }
+    });
 
     // ─── Scroll Reveal ──────────────────────────────────────────────────────
     gsap.utils.toArray('.reveal').forEach((el) => {
