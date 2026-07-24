@@ -29,8 +29,13 @@
     ];
 
     $mainSiteLabel = 'Home';
-    $journeyVideoSrc = asset('video/landing-journey.mp4');
-    $journeyPoster = asset('images/landing/journey-poster.jpg');
+    $act1Video = asset('video/journey-act1.mp4');
+    $act2Video = asset('video/journey-act2.mp4');
+    $act3Video = asset('video/journey-act3.mp4');
+
+    $act1Poster = asset('images/landing/journey-act1-poster.jpg');
+    $act2Poster = asset('images/landing/journey-act2-poster.jpg');
+    $act3Poster = asset('images/landing/journey-act3-poster.jpg');
 @endphp
 
 @push('head')
@@ -115,12 +120,24 @@
 
     /* Poster shows the instant the section mounts; once the scrubbed video
        reports a real frame it fades away so there's never a blank/black gap. */
-    #scroll-journey-video {
+    .scroll-act-video {
         background: #000 center / cover no-repeat;
-        background-image: url('{{ $journeyPoster }}');
+        transition: opacity var(--duration-base) ease;
     }
 
-    #scroll-journey-video.is-ready {
+    #journey-act1 {
+        background-image: url('{{ $act1Poster }}');
+    }
+
+    #journey-act2 {
+        background-image: url('{{ $act2Poster }}');
+    }
+
+    #journey-act3 {
+        background-image: url('{{ $act3Poster }}');
+    }
+
+    .scroll-act-video.is-ready {
         background-image: none;
     }
 
@@ -279,16 +296,49 @@
 <section id="cinematic-wrapper" class="relative h-[360vh] bg-black">
     <div class="sticky top-0 h-screen w-full overflow-hidden">
         <video
-            id="scroll-journey-video"
-            src="{{ $journeyVideoSrc }}"
-            poster="{{ $journeyPoster }}"
+            id="journey-act1"
+            class="scroll-act-video absolute inset-0 h-full w-full object-cover"
+            data-start="0.00"
+            data-end="0.33"
+            src="{{ $act1Video }}"
+            poster="{{ $act1Poster }}"
             muted
             playsinline
             disablePictureInPicture
             disableRemotePlayback
             preload="auto"
             aria-hidden="true"
-            class="absolute inset-0 h-full w-full object-cover"
+            style="opacity: 0;"
+        ></video>
+        <video
+            id="journey-act2"
+            class="scroll-act-video absolute inset-0 h-full w-full object-cover"
+            data-start="0.33"
+            data-end="0.66"
+            src="{{ $act2Video }}"
+            poster="{{ $act2Poster }}"
+            muted
+            playsinline
+            disablePictureInPicture
+            disableRemotePlayback
+            preload="auto"
+            aria-hidden="true"
+            style="opacity: 0;"
+        ></video>
+        <video
+            id="journey-act3"
+            class="scroll-act-video absolute inset-0 h-full w-full object-cover"
+            data-start="0.66"
+            data-end="1.00"
+            src="{{ $act3Video }}"
+            poster="{{ $act3Poster }}"
+            muted
+            playsinline
+            disablePictureInPicture
+            disableRemotePlayback
+            preload="auto"
+            aria-hidden="true"
+            style="opacity: 0;"
         ></video>
 
         <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0)_0%,rgba(0,0,0,.22)_48%,rgba(0,0,0,.72)_100%)]"></div>

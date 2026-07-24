@@ -23,9 +23,10 @@ class AboutController extends Controller
      */
     public function create()
     {
-        if (About::exists()){
+        if (About::exists()) {
             return redirect()->route('admin.about.index');
         }
+
         return view('admin.about.create');
     }
 

@@ -42,7 +42,7 @@ class ContactController extends Controller
 
         Contact::create($validated);
 
-        return back()->with('success','Message sent successfully.');
+        return back()->with('success', 'Message sent successfully.');
     }
 
     /**

@@ -33,15 +33,25 @@ document.addEventListener('DOMContentLoaded', () => {
     // pinned to #cinematic-wrapper's 500vh scroll range, instead of hand-
     // rolling scroll-position math off window.scrollY.
     const initVideo = () => {
-        const video = document.getElementById('scroll-journey-video');
         const wrapper = document.getElementById('cinematic-wrapper');
-        if (!video || !wrapper) return; // not on the landing page
+        const actEls = Array.from(document.querySelectorAll('.scroll-act-video'));
+        if (!wrapper || actEls.length === 0) return; // not on the landing page
+
+        const acts = actEls.map((video) => ({
+            video,
+            start: parseFloat(video.dataset.start),
+            end: parseFloat(video.dataset.end),
+        }));
+
+        // How much of the scroll range (as a fraction, e.g. 0.03 = 3%) each
+        // act spends crossfading into/out of its neighbor at zone edges.
+        const CROSSFADE = 0.03;
 
         // Safari (desktop + iOS) silently ignores currentTime scrubs on a
         // video that has never played. A single muted play/pause primes the
         // decoder so later frame-seeks actually paint. This is a no-op on
         // browsers that don't need it.
-        const primeVideo = () => {
+        const primeVideo = (video) => {
             const playAttempt = video.play();
             if (playAttempt && typeof playAttempt.then === 'function') {
                 playAttempt.then(() => video.pause()).catch(() => {
@@ -51,32 +61,64 @@ document.addEventListener('DOMContentLoaded', () => {
                 video.pause();
             }
         };
-        primeVideo();
 
-        let hasPaintedFrame = false;
-        video.addEventListener('error', () => {
-            console.error('[scroll-journey-video] failed to load:', video.error);
-        });
-        video.addEventListener('seeked', () => {
-            if (!hasPaintedFrame) {
-                hasPaintedFrame = true;
-                video.classList.add('is-ready'); // swap the poster out for the live frame
-            }
+        acts.forEach(({ video }) => {
+            primeVideo(video);
+
+            let hasPaintedFrame = false;
+            video.addEventListener('error', () => {
+                console.error(`[${video.id}] failed to load:`, video.error);
+            });
+            video.addEventListener('seeked', () => {
+                if (!hasPaintedFrame) {
+                    hasPaintedFrame = true;
+                    video.classList.add('is-ready'); // swap the poster out for the live frame
+                }
+            });
         });
 
+        const clamp01 = (n) => Math.min(1, Math.max(0, n));
+
+        // Maps overall scroll progress onto each act: how visible it is
+        // (for the crossfade) and where it should be scrubbed to internally.
         const setFrame = (progress) => {
             // Broadcast to React camera spline
             window.dispatchEvent(new CustomEvent('cinematic-scroll', { detail: { progress } }));
 
-            if (!isNaN(video.duration) && video.duration > 0) {
-                const t = Math.min(video.duration, Math.max(0, progress * video.duration));
-                if (Number.isFinite(t)) {
-                    video.currentTime = t;
+            acts.forEach(({ video, start, end }) => {
+                let opacity;
+                if (progress <= start - CROSSFADE || progress >= end + CROSSFADE) {
+                    opacity = 0;
+                } else if (progress < start + CROSSFADE) {
+                    if (start === 0.0) {
+                        opacity = 1;
+                    } else {
+                        opacity = clamp01((progress - (start - CROSSFADE)) / (CROSSFADE * 2));
+                    }
+                } else if (progress > end - CROSSFADE) {
+                    if (end === 1.0) {
+                        opacity = 1;
+                    } else {
+                        opacity = clamp01(1 - (progress - (end - CROSSFADE)) / (CROSSFADE * 2));
+                    }
+                } else {
+                    opacity = 1;
                 }
-            }
+
+                video.style.opacity = opacity;
+
+                // Only bother scrubbing a video that's at least partially
+                // visible — keeps idle acts from fighting for decode time.
+                if (opacity > 0.01 && !isNaN(video.duration) && video.duration > 0) {
+                    const localProgress = clamp01((progress - start) / (end - start));
+                    const t = Math.min(video.duration, Math.max(0, localProgress * video.duration));
+                    if (Number.isFinite(t)) {
+                        video.currentTime = t;
+                    }
+                }
+            });
         };
 
-        // When metadata loads, show the first frame then build the trigger
         // Initialize step states
         gsap.set(['#landing-journey-step-1', '#landing-journey-step-2', '#landing-journey-step-3'], {
             y: 30,
@@ -120,13 +162,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
-        if (video.readyState >= 1) {
-            syncInitialFrame();
-        } else {
-            video.addEventListener('loadedmetadata', syncInitialFrame, { once: true });
-        }
-
-        video.addEventListener('durationchange', syncInitialFrame);
+        // Every act needs its own metadata before it can be scrubbed —
+        // wait on whichever ones aren't ready yet, and re-sync as each lands.
+        acts.forEach(({ video }) => {
+            if (video.readyState >= 1) {
+                syncInitialFrame();
+            } else {
+                video.addEventListener('loadedmetadata', syncInitialFrame, { once: true });
+            }
+            video.addEventListener('durationchange', syncInitialFrame);
+        });
     };
 
     initVideo();
