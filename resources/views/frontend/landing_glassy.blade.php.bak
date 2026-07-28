@@ -394,17 +394,14 @@
     </div>
 </section>
 
-<section class="landing-body-font flex h-screen w-full items-center justify-center px-5 text-center relative" style="background-color: var(--ink-900);">
-    <div class="soft-panel max-w-lg rounded-[32px] px-10 py-12 flex flex-col items-center justify-center gap-6 shadow-xl border border-white bg-white/70 backdrop-blur-lg">
-        <div class="h-px w-16" style="background: var(--brass-dim);"></div>
-        <p class="font-mono text-xs font-semibold uppercase tracking-[0.3em]" style="color: var(--brass);">The journey continues</p>
-        <h2 class="font-display text-4xl md:text-5xl font-light italic" style="color: var(--paper);">Let us help you heal.</h2>
-        <p class="font-sans text-sm leading-relaxed max-w-sm" style="color: var(--paper-dim);">
-            Take the next step towards clarity, guidance, and emotional resilience.
-        </p>
+<section class="landing-body-font flex flex-col items-center justify-center bg-black px-5 py-24 text-center text-white relative">
+    <div class="landing-liquid-glass max-w-md rounded-[32px] px-8 py-10 flex flex-col items-center justify-center gap-4 backdrop-blur-md bg-white/5">
+        <div class="h-px w-12 bg-white/20"></div>
+        <p class="text-[0.62rem] font-semibold uppercase tracking-[0.3em] text-white/60">The journey continues</p>
+        <h3 class="font-display text-2xl md:text-3xl font-light italic text-white my-1">Let us help you heal.</h3>
         <a
             href="{{ route('home') }}"
-            class="gradient-button rounded-full px-8 py-3.5 text-sm font-semibold transition shadow-md"
+            class="inline-flex rounded-full bg-white px-8 py-3 text-sm font-semibold text-[#182C41] transition hover:bg-white/90 shadow-lg"
         >
             {{ $mainSiteLabel }}
         </a>

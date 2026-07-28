@@ -236,6 +236,14 @@
             <a href="{{ route('home') }}" class="text-xl italic leading-none text-white sm:text-2xl" aria-label="{{ $displayName }} home">
                 {{ $displayName }}
             </a>
+
+            <a
+                href="{{ route('home') }}"
+                class="landing-liquid-glass landing-body-font rounded-full px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10"
+                aria-label="Go to main site"
+            >
+                {{ $mainSiteLabel }}
+            </a>
         </nav>
 
         <div
@@ -338,48 +346,42 @@
 
         <!-- Narrative Overlays (Animated via GSAP ScrollTrigger) -->
         <div id="landing-journey-step-1" class="absolute inset-0 z-10 flex h-full flex-col items-center justify-center px-5 text-center text-white pointer-events-none opacity-0">
-            <div class="landing-liquid-glass max-w-2xl rounded-[32px] px-8 py-10 text-center text-white backdrop-blur-md bg-white/5">
-                <p class="landing-body-font text-xs font-semibold uppercase tracking-[0.35em] style-color-muted" style="color: rgba(255,255,255,0.7);">
-                    01 / The Weight
-                </p>
-                <h2 class="mt-4 text-balance text-3xl font-normal leading-[1.1] sm:text-4xl md:text-5xl">
-                    When daily life feels<br>
-                    <em class="italic" style="color:#FF5A3C;">exhausting.</em>
-                </h2>
-                <p class="landing-body-font mt-4 max-w-lg text-sm leading-relaxed text-white/80">
-                    Anxiety, depression, and burnout can cloud your vision. Recognizing the burden is the first step toward reclaiming your peace.
-                </p>
-            </div>
+            <p class="landing-body-font text-xs font-semibold uppercase tracking-[0.35em] style-color-muted" style="color: rgba(255,255,255,0.5);">
+                01 / The Weight
+            </p>
+            <h2 class="mt-5 max-w-4xl text-balance text-4xl font-normal leading-[1.05] sm:text-5xl md:text-7xl">
+                When daily life feels<br>
+                <em class="italic" style="color:#FF5A3C;">exhausting.</em>
+            </h2>
+            <p class="landing-body-font mt-6 max-w-lg text-sm leading-relaxed text-white/60 sm:text-base">
+                Anxiety, depression, and burnout can cloud your vision. Recognizing the burden is the first step toward reclaiming your peace.
+            </p>
         </div>
 
         <div id="landing-journey-step-2" class="absolute inset-0 z-10 flex h-full flex-col items-center justify-center px-5 text-center text-white pointer-events-none opacity-0">
-            <div class="landing-liquid-glass max-w-2xl rounded-[32px] px-8 py-10 text-center text-white backdrop-blur-md bg-white/5">
-                <p class="landing-body-font text-xs font-semibold uppercase tracking-[0.35em] style-color-muted" style="color: rgba(255,255,255,0.7);">
-                    02 / The Sanctuary
-                </p>
-                <h2 class="mt-4 text-balance text-3xl font-normal leading-[1.1] sm:text-4xl md:text-5xl">
-                    A quiet place<br>
-                    <em class="italic" style="color:#B6FF3C;">to begin again.</em>
-                </h2>
-                <p class="landing-body-font mt-4 max-w-lg text-sm leading-relaxed text-white/80">
-                    Yazmak offers a confidential, professional psychiatric sanctuary designed to support you with tailored, evidence-based care.
-                </p>
-            </div>
+            <p class="landing-body-font text-xs font-semibold uppercase tracking-[0.35em] style-color-muted" style="color: rgba(255,255,255,0.5);">
+                02 / The Sanctuary
+            </p>
+            <h2 class="mt-5 max-w-4xl text-balance text-4xl font-normal leading-[1.05] sm:text-5xl md:text-7xl">
+                A quiet place<br>
+                <em class="italic" style="color:#B6FF3C;">to begin again.</em>
+            </h2>
+            <p class="landing-body-font mt-6 max-w-lg text-sm leading-relaxed text-white/60 sm:text-base">
+                Yazmak offers a confidential, professional psychiatric sanctuary designed to support you with tailored, evidence-based care.
+            </p>
         </div>
 
         <div id="landing-journey-step-3" class="absolute inset-0 z-10 flex h-full flex-col items-center justify-center px-5 text-center text-white pointer-events-none opacity-0">
-            <div class="landing-liquid-glass max-w-2xl rounded-[32px] px-8 py-10 text-center text-white backdrop-blur-md bg-white/5">
-                <p class="landing-body-font text-xs font-semibold uppercase tracking-[0.35em] style-color-muted" style="color: rgba(255,255,255,0.7);">
-                    03 / The Path
-                </p>
-                <h2 class="mt-4 text-balance text-3xl font-normal leading-[1.1] sm:text-4xl md:text-5xl">
-                    Step back into<br>
-                    <em class="italic text-white">your full vitality.</em>
-                </h2>
-                <p class="landing-body-font mt-4 max-w-lg text-sm leading-relaxed text-white/80">
-                    Build lasting emotional resilience, navigate your challenges, and discover a sustainable balance with expert guidance.
-                </p>
-            </div>
+            <p class="landing-body-font text-xs font-semibold uppercase tracking-[0.35em] style-color-muted" style="color: rgba(255,255,255,0.5);">
+                03 / The Path
+            </p>
+            <h2 class="mt-5 max-w-4xl text-balance text-4xl font-normal leading-[1.05] sm:text-5xl md:text-7xl">
+                Step back into<br>
+                <em class="italic text-white">your full vitality.</em>
+            </h2>
+            <p class="landing-body-font mt-6 max-w-lg text-sm leading-relaxed text-white/60 sm:text-base">
+                Build lasting emotional resilience, navigate your challenges, and discover a sustainable balance with expert guidance.
+            </p>
         </div>
 
         <div class="landing-body-font absolute right-5 top-1/2 z-20 hidden -translate-y-1/2 flex-col items-center gap-3 text-white/60 sm:flex">
@@ -394,20 +396,14 @@
     </div>
 </section>
 
-<section class="landing-body-font flex h-screen w-full items-center justify-center px-5 text-center relative" style="background-color: var(--ink-900);">
-    <div class="soft-panel max-w-lg rounded-[32px] px-10 py-12 flex flex-col items-center justify-center gap-6 shadow-xl border border-white bg-white/70 backdrop-blur-lg">
-        <div class="h-px w-16" style="background: var(--brass-dim);"></div>
-        <p class="font-mono text-xs font-semibold uppercase tracking-[0.3em]" style="color: var(--brass);">The journey continues</p>
-        <h2 class="font-display text-4xl md:text-5xl font-light italic" style="color: var(--paper);">Let us help you heal.</h2>
-        <p class="font-sans text-sm leading-relaxed max-w-sm" style="color: var(--paper-dim);">
-            Take the next step towards clarity, guidance, and emotional resilience.
-        </p>
-        <a
-            href="{{ route('home') }}"
-            class="gradient-button rounded-full px-8 py-3.5 text-sm font-semibold transition shadow-md"
-        >
-            {{ $mainSiteLabel }}
-        </a>
-    </div>
+<section class="landing-body-font flex flex-col items-center gap-5 bg-black px-5 py-20 text-center text-white">
+    <div class="h-px w-12" style="background: rgba(255,255,255,0.2);"></div>
+    <p class="text-[0.62rem] font-semibold uppercase tracking-[0.3em] text-white/45">The journey continues</p>
+    <a
+        href="{{ route('home') }}"
+        class="inline-flex rounded-full bg-white px-7 py-3 text-sm font-semibold text-[#182C41] transition hover:bg-white/90"
+    >
+        {{ $mainSiteLabel }}
+    </a>
 </section>
 @endsection
